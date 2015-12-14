@@ -20,6 +20,8 @@ var app = {
     app.$roomSelect = $('#roomSelect');
     app.$send = $('#send');
 
+    //app.$roomSelect.append('<option>lobby</option>');
+
     // Add listeners
     app.$main.on('click', '.username', app.addFriend);
     app.$send.on('submit', app.handleSubmit);
@@ -45,7 +47,7 @@ var app = {
       data: JSON.stringify(data),
       contentType: 'application/json',
       success: function (data) {
-        console.log(data.results[0])
+        console.log(data)
         // Trigger a fetch to update the messages, pass true to animate
         app.fetch();
       },
@@ -60,11 +62,14 @@ var app = {
       url: app.server,
       type: 'GET',
       contentType: 'application/json',
-      // data: { order: '-createdAt'},
+      data: { roomName: $('#roomSelect').val()},
       success: function(data) {
-        console.log(data.results[0])
+        console.log(data.results)
         // Don't bother if we have nothing to work with
-        if (!data.results || !data.results.length) { return; }
+        if (!data.results || !data.results.length) {
+          app.stopSpinner()
+          return;
+        }
 
         // Get the last message
         var mostRecentMessage = data.results[data.results.length-1];
@@ -137,6 +142,7 @@ var app = {
 
   addRoom: function(roomname) {
     // Prevent XSS by escaping with DOM methods
+    //roomname = roomname.toLowerCase();
     var $option = $('<option/>').val(roomname).text(roomname);
 
     // Add to select

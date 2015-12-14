@@ -12,8 +12,10 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 var fs = require('fs')
-
+var url = require('url')
 var messages = {results:[]};
+// var _ = require('underscore')
+var counter = 0;
 
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -48,14 +50,38 @@ var requestHandler = function(request, response) {
   // which includes the status and all headers.
   response.writeHead(statusCode, headers);
 
+  var parsedUrl = url.parse(request.url, true);
 
   if(request.method == 'GET'){
+    //read the chatroom from url
+    var room = parsedUrl.query.roomName
+    room = (room == '') ? 'lobby' : room ;
+
+    //response.end(filtered messages)
+    var filtered = messages.results.filter( function(message){
+      return message.roomname === room
+    })
+    console.log(filtered);
+
     // locate messages and return
-    response.end(JSON.stringify({results: ['i got you']}))
+    response.end(JSON.stringify({results: filtered}))
   }
   else if (request.method == 'POST'){
     // write message to file
-    response.end(JSON.stringify({results: ['dat post']}))
+    counter++;
+    var dataStr = '';
+
+    request.on('data', function(data){
+      dataStr += data;
+    });
+
+    request.on('end', function(){
+      var newObj = JSON.parse(dataStr);
+      newObj.objectId = counter;
+      messages.results.push(newObj);
+      console.log(messages);
+      //response.end('Push successful')
+    })
   }
   else{
     response.end('bad request')
